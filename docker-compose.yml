@@ -12,6 +12,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DISABLE_AUTH=true
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "5001:9090"
+    volumes:
+      - ./conf:/config
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/config/prometheus.yml"
   gogin:
     platform: linux/amd64
     build:
@@ -33,9 +44,11 @@ services:
 volumes:
   gomod:
   gocache:
+  prometheus-data:
+    driver: local
 networks:
   default:
-    name: eris-network
+    name: goauth-net
     ipam:
       driver: default
       config:

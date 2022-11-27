@@ -39,6 +39,12 @@ type Server struct {
 
 var ServerSetting = &Server{}
 
+type Prometheus struct {
+	Hostname string
+}
+
+var PrometheusSetting = &Prometheus{}
+
 type Database struct {
 	Type        string
 	User        string
@@ -72,6 +78,7 @@ func Setup() {
 
 	mapTo("app", AppSetting)
 	mapTo("server", ServerSetting)
+	mapTo("prometheus", PrometheusSetting)
 	mapTo("database", DatabaseSetting)
 	mapTo("redis", RedisSetting)
 

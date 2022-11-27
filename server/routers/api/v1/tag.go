@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +17,6 @@ import (
 // @Router /api/v1/tags [get]
 func GetTags(c *gin.Context) {
 	appG := app.Gin{C: c}
-	fmt.Println("OK")
 	appG.Response(http.StatusOK, e.SUCCESS, map[string]interface{}{
 		"ok": true,
 	})

@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -40,8 +41,9 @@ func Setup() {
 	if err != nil {
 		log.Fatalf("logging.Setup err: %v", err)
 	}
+	mw := io.MultiWriter(os.Stdout, F)
 
-	logger = log.New(F, DefaultPrefix, log.LstdFlags)
+	logger = log.New(mw, DefaultPrefix, log.LstdFlags)
 }
 
 // Debug output logs at debug level
