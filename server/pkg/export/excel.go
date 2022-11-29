@@ -16,5 +16,5 @@ func GetExcelPath() string {
 
 // GetExcelFullPath Get the full save path of the Excel file
 func GetExcelFullPath() string {
-	return setting.AppSetting.RuntimeRootPath + GetExcelPath()
+	return setting.AppSetting.BinaryRootPath + GetExcelPath()
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +29,7 @@ func main() {
 	gin.SetMode(setting.ServerSetting.RunMode)
 
 	routersInit := routers.InitRouter()
+	// swagger.GenerateSwaggerDocsAndEndpoints(routersInit.,"asd")
 	readTimeout := setting.ServerSetting.ReadTimeout
 	writeTimeout := setting.ServerSetting.WriteTimeout
 	endPoint := fmt.Sprintf(":%d", setting.ServerSetting.HttpPort)
@@ -43,7 +43,7 @@ func main() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	log.Printf("[info] start http server listening %s", endPoint)
+	logging.Infof("start http server listening on %s", endPoint)
 
 	server.ListenAndServe()
 }

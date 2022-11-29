@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/prom"
 	"github.com/kevin-luvian/goauth/server/pkg/util"
 )
@@ -12,10 +13,12 @@ import (
 func HttpMetricsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
+		logging.Infoln("log metrics", c.Request.URL.String())
 
 		c.Next()
 
 		prom.CollectHttp(prom.HTTPMetrics{
+			ClientIP:     util.GetClientIPAddr(c.Request),
 			Method:       c.Request.Method,
 			Route:        c.Request.URL.String(),
 			StatusCode:   c.Writer.Status(),

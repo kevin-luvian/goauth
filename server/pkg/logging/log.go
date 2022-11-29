@@ -2,88 +2,85 @@ package logging
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"os"
 	"path/filepath"
 	"runtime"
 
-	"github.com/kevin-luvian/goauth/server/pkg/file"
+	"github.com/sirupsen/logrus"
+	"github.com/ttys3/rotatefilehook"
 )
-
-type Level int
 
 var (
-	F *os.File
-
-	DefaultPrefix      = ""
 	DefaultCallerDepth = 2
 
-	logger     *log.Logger
-	logPrefix  = ""
-	levelFlags = []string{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
-)
-
-const (
-	DEBUG Level = iota
-	INFO
-	WARNING
-	ERROR
-	FATAL
+	logger *logrus.Logger
 )
 
 // Setup initialize the log instance
 func Setup() {
-	var err error
 	filePath := getLogFilePath()
 	fileName := getLogFileName()
-	F, err = file.MustOpen(fileName, filePath)
+	logger = logrus.New()
+
+	logger.SetFormatter(&logrus.TextFormatter{
+		DisableTimestamp: true,
+		PadLevelText:     true,
+		DisableSorting:   true,
+	})
+
+	rotateFileHook, err := rotatefilehook.NewRotateFileHook(rotatefilehook.RotateFileConfig{
+		Filename:   fmt.Sprintf("%s/%s", filePath, fileName),
+		MaxSize:    10, // the maximum size in megabytes
+		MaxBackups: 5,  // the maximum number of old log files to retain
+		MaxAge:     7,  // the maximum number of days to retain old log files
+		LocalTime:  true,
+		Level:      logrus.InfoLevel,
+		Formatter:  &logrus.JSONFormatter{},
+	})
 	if err != nil {
-		log.Fatalf("logging.Setup err: %v", err)
+		logger.Fatal(err)
 	}
-	mw := io.MultiWriter(os.Stdout, F)
 
-	logger = log.New(mw, DefaultPrefix, log.LstdFlags)
-}
-
-// Debug output logs at debug level
-func Debug(v ...interface{}) {
-	setPrefix(DEBUG)
-	logger.Println(v...)
+	logger.AddHook(rotateFileHook)
 }
 
 // Info output logs at info level
-func Info(v ...interface{}) {
-	setPrefix(INFO)
-	logger.Println(v...)
+func Debugln(v ...interface{}) {
+	addFields().Debugln(v...)
 }
 
-// Warn output logs at warn level
-func Warn(v ...interface{}) {
-	setPrefix(WARNING)
-	logger.Println(v...)
+// Info output logs at info level
+func Infoln(v ...interface{}) {
+	addFields().Infoln(v...)
+}
+
+// Infof output logs at info level
+func Infof(s string, v ...interface{}) {
+	addFields().Infof(s, v...)
 }
 
 // Error output logs at error level
-func Error(v ...interface{}) {
-	setPrefix(ERROR)
-	logger.Println(v...)
+func Errorln(v ...interface{}) {
+	addFields().Errorln(v...)
 }
 
 // Fatal output logs at fatal level
-func Fatal(v ...interface{}) {
-	setPrefix(FATAL)
-	logger.Println(v...)
+func Fatalln(v ...interface{}) {
+	addFields().Fatalln(v...)
 }
 
 // setPrefix set the prefix of the log output
-func setPrefix(level Level) {
+func addFields() *logrus.Entry {
+	fields := map[string]interface{}{}
+
 	_, file, line, ok := runtime.Caller(DefaultCallerDepth)
 	if ok {
-		logPrefix = fmt.Sprintf("[%s][%s:%d]", levelFlags[level], filepath.Base(file), line)
-	} else {
-		logPrefix = fmt.Sprintf("[%s]", levelFlags[level])
+		base := filepath.Base(filepath.Dir(file))
+		file = filepath.Base(file)
+
+		fields = logrus.Fields{
+			"caller": fmt.Sprintf("%s/%s:%d", base, file, line),
+		}
 	}
 
-	logger.SetPrefix(logPrefix)
+	return logger.WithFields(fields)
 }

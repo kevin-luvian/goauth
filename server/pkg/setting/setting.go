@@ -12,7 +12,7 @@ type App struct {
 	PageSize  int
 	PrefixUrl string
 
-	RuntimeRootPath string
+	BinaryRootPath string
 
 	ImageSavePath  string
 	ImageMaxSize   int

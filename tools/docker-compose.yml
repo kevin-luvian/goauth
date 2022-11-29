@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  yacht:
+    image: selfhostedpro/yacht
+    container_name: yacht
+    restart: unless-stopped
+    ports:
+      - 5000:8000
+    volumes:
+      - ../bin/conf:/config
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DISABLE_AUTH=true
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "5001:9090"
+    volumes:
+      - ../conf:/config
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=../config/prometheus.yml"
+volumes:
+  prometheus-data:
+    driver: local
+networks:
+  default:
+    name: goauth-net
+    ipam:
+      driver: default
+      config:
+      - subnet:  172.22.0.0/16
