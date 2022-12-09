@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  gogin:
+  goauth-be:
     platform: linux/amd64
     build:
       context: .
       dockerfile: ./dev/Dockerfile
-    container_name: gogin
+    container_name: goauth-be
     ports:
       - 8000:8000
     volumes:
@@ -14,11 +14,24 @@ services:
       - gomod:/go/pkg/mod
       - gocache:/root/.cache/go-build
     command: [ "air", "-c", "dev/.air.conf" ]
+    restart: unless-stopped
     healthcheck:
-      test: curl --fail -s http://localhost:8000/ping || exit 1
+      test: curl --fail -s http://localhost:8000/api/ping || exit 1
       interval: 1m30s
       timeout: 10s
       retries: 3
+  goauth-fe:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    container_name: goauth-fe
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      # - gomodules:/app/node_modules
+      # - gonext:/app/.next
+    ports:
+      - 8001:3000
 volumes:
   gomod:
   gocache:

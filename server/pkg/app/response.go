@@ -1,6 +1,8 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kevin-luvian/goauth/server/pkg/e"
 )
@@ -15,6 +17,14 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
+func Success(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, Response{
+		Code: e.SUCCESS,
+		Msg:  e.GetMsg(e.SUCCESS),
+		Data: data,
+	})
+}
+
 // Response setting gin.JSON
 func (g *Gin) Response(httpCode, errCode int, data interface{}) {
 	g.C.JSON(httpCode, Response{
@@ -22,5 +32,4 @@ func (g *Gin) Response(httpCode, errCode int, data interface{}) {
 		Msg:  e.GetMsg(errCode),
 		Data: data,
 	})
-	return
 }

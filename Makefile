@@ -2,11 +2,22 @@
 
 export NOW=$(shell date +"%Y/%m/%d")
 
+generate:
+	@echo "${NOW} === GENERATING FILES ==="
+	@go generate ./...
+	@echo "${NOW} === GENERATED ==="
+
 .PHONY: dev
 dev:
 	@echo "${NOW} === RUNNING DEVELOPMENT ENV ==="
-	@docker-compose stop gogin && docker-compose up -d gogin
-	@echo "click this link to open the page http://localhost:8000"
+	@docker-compose stop goauth-be goauth-fe && docker-compose up -d goauth-be goauth-fe
+	@echo "click this link to open the backend http://localhost:8000"
+	@echo "click this link to open the frontend http://localhost:8001"
+
+dev-fe:
+	@echo "${NOW} === RUNNING DEVELOPMENT ENV ==="
+	@docker-compose stop goauth-fe && docker-compose up -d goauth-fe
+	@echo "click this link to open the page http://localhost:8001"
 
 dev-tools:
 	@echo "${NOW} === RUNNING DEVELOPMENT TOOLS ==="

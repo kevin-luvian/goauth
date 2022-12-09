@@ -1,3 +1,6 @@
+# sensitive files
+conf/app.ini
+
 # Binaries for programs and plugins
 bin/
 vendor/

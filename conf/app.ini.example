@@ -18,6 +18,11 @@ LogSaveName = log-
 LogFileExt = log
 TimeFormat = 2006-01-02
 
+[google-oauth]
+ClientID = <redacted>
+SecretID = <redacted>
+RedirectURL = <redacted>
+
 [prometheus]
 Hostname = goauth_instance
 

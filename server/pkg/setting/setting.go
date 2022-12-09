@@ -7,6 +7,14 @@ import (
 	"github.com/go-ini/ini"
 )
 
+type GoogleOAuth struct {
+	ClientID    string
+	SecretID    string
+	RedirectURL string
+}
+
+var GoogleOAuthSetting = &GoogleOAuth{}
+
 type App struct {
 	JwtSecret string
 	PageSize  int
@@ -81,6 +89,7 @@ func Setup() {
 	mapTo("prometheus", PrometheusSetting)
 	mapTo("database", DatabaseSetting)
 	mapTo("redis", RedisSetting)
+	mapTo("google-oauth", GoogleOAuthSetting)
 
 	AppSetting.ImageMaxSize = AppSetting.ImageMaxSize * 1024 * 1024
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second

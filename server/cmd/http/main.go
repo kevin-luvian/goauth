@@ -5,11 +5,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kevin-luvian/goauth/server/handler"
 	"github.com/kevin-luvian/goauth/server/pkg/gredis"
 	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
 	"github.com/kevin-luvian/goauth/server/pkg/util"
+	authRepo "github.com/kevin-luvian/goauth/server/repositories/auth"
 	"github.com/kevin-luvian/goauth/server/routers"
+	authUC "github.com/kevin-luvian/goauth/server/usecases/auth"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 func init() {
@@ -19,16 +24,32 @@ func init() {
 	util.Setup()
 }
 
-// @title Golang Gin API
-// @version 1.0
-// @description An example of gin
-// @termsOfService https://github.com/EDDYCJY/go-gin-example
-// @license.name MIT
-// @license.url https://github.com/EDDYCJY/go-gin-example/blob/master/LICENSE
 func main() {
 	gin.SetMode(setting.ServerSetting.RunMode)
 
-	routersInit := routers.InitRouter()
+	ga := &oauth2.Config{
+		ClientID:     setting.GoogleOAuthSetting.ClientID,
+		ClientSecret: setting.GoogleOAuthSetting.SecretID,
+		RedirectURL:  setting.GoogleOAuthSetting.RedirectURL,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+
+	authRepo := authRepo.New(ga)
+
+	authUC := authUC.New(authUC.Dependencies{
+		AuthRepo: authRepo,
+	})
+
+	h := handler.New(handler.Dependencies{
+		AuthUC: authUC,
+	})
+
+	routersInit := routers.InitRouter(h)
+
 	// swagger.GenerateSwaggerDocsAndEndpoints(routersInit.,"asd")
 	readTimeout := setting.ServerSetting.ReadTimeout
 	writeTimeout := setting.ServerSetting.WriteTimeout
