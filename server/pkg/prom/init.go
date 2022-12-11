@@ -2,7 +2,6 @@ package prom
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/kevin-luvian/goauth/server/pkg/setting"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
@@ -15,7 +14,7 @@ func Setup() {
 		Namespace: "goauth",
 		Name:      "process_identifier",
 	}, []string{"hostname"})
-	identifier.WithLabelValues(setting.PrometheusSetting.Hostname).Inc()
+	identifier.WithLabelValues("goauth_instance").Inc()
 
 	registry = prometheus.NewRegistry()
 	registry.MustRegister(

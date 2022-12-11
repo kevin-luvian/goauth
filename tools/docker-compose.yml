@@ -1,31 +1,61 @@
 version: "3.8"
 
 services:
-  yacht:
-    image: selfhostedpro/yacht
-    container_name: yacht
-    restart: unless-stopped
-    ports:
-      - 5000:8000
-    volumes:
-      - ../bin/conf:/config
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - DISABLE_AUTH=true
+  # yacht:
+  #   image: selfhostedpro/yacht
+  #   container_name: yacht
+  #   restart: unless-stopped
+  #   ports:
+  #     - 5000:8000
+  #   volumes:
+  #     - ../bin/conf:/config
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     - DISABLE_AUTH=true
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     ports:
       - "5001:9090"
     volumes:
-      - ../conf:/config
-      - prometheus-data:/prometheus
+      - ./prometheus:/config
+      - ./bin/prometheus:/prometheus
     restart: unless-stopped
     command:
-      - "--config.file=../config/prometheus.yml"
-volumes:
-  prometheus-data:
-    driver: local
+      - "--config.file=../config/config.yml"
+  consul:
+    container_name: consul
+    build:
+      context: ./consul
+      dockerfile: Dockerfile
+    ports:
+      - 8500:8500
+    command: agent -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect 1 -config-file=/consul/config.json
+    volumes:
+      - ./consul/config.json:/consul/config.json
+      - ./bin/consul/data:/consul/data
+  vault:
+    container_name: vault
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    ports:
+      - 8200:8200
+    volumes:
+      - ./vault/config.json:/vault/config.json
+      - ./bin/vault/policies:/vault/policies
+      - ./bin/vault/data:/vault/data
+      - ./bin/vault/logs:/vault/logs
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
+    command: server -config=/vault/config.json
+    cap_add:
+      - IPC_LOCK
+    depends_on:
+      - consul
+# volumes:
+#   prometheus-data:
+#     driver: local
 networks:
   default:
     name: goauth-net

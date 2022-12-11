@@ -20,6 +20,8 @@ services:
       interval: 1m30s
       timeout: 10s
       retries: 3
+    depends_on:
+      - goauth-redis
   goauth-fe:
     build:
       context: ./frontend/
@@ -32,6 +34,15 @@ services:
       # - gonext:/app/.next
     ports:
       - 8001:3000
+  goauth-redis:
+    image: redis:6.2.6-alpine
+    container_name: goauth-redis
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    volumes:
+      - ./conf/redis.conf:/etc/redis/redis.conf
+    restart: unless-stopped
+    ports:
+      - 8002:6379
 volumes:
   gomod:
   gocache:

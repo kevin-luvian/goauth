@@ -9,14 +9,18 @@ import (
 
 // getLogFilePath get the log file save path
 func getLogFilePath() string {
-	return fmt.Sprintf("%s%s", setting.AppSetting.BinaryRootPath, setting.AppSetting.LogSavePath)
+	s := setting.App
+
+	return fmt.Sprintf("%s%s", s.BinaryRootPath, s.LogSavePath)
 }
 
 // getLogFileName get the save name of the log file
 func getLogFileName() string {
+	s := setting.App
+
 	return fmt.Sprintf("%s%s.%s",
-		setting.AppSetting.LogSaveName,
-		time.Now().Format(setting.AppSetting.TimeFormat),
-		setting.AppSetting.LogFileExt,
+		s.LogSaveName,
+		time.Now().Format(s.TimeFormat),
+		s.LogFileExt,
 	)
 }

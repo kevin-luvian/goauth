@@ -1,37 +1,49 @@
 package routers
 
 import (
+	"strings"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/kevin-luvian/goauth/server/handler"
 	"github.com/kevin-luvian/goauth/server/middlewares"
 	"github.com/kevin-luvian/goauth/server/pkg/prom"
-	"github.com/kevin-luvian/goauth/server/routers/api"
-	v1 "github.com/kevin-luvian/goauth/server/routers/api/v1"
+	"github.com/kevin-luvian/goauth/server/pkg/setting"
+	"github.com/kevin-luvian/goauth/server/pkg/util"
 )
 
 // InitRouter initialize routing information
 func InitRouter(h *handler.Handler) *gin.Engine {
 	r := gin.New()
-	// r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
-	prom.Setup()
+	// r.Use(gin.Logger())
+	// r.Use(func(c *gin.Context) {
+	// 	or := c.GetHeader("origin")
+	// 	logging.Infoln("Header Origin", or)
+	// })
+
+	corsRules := util.CreateCORSRule(strings.Split(setting.App.CORS, ";"))
+	r.Use(cors.New(cors.Config{
+		AllowOriginFunc: util.CheckOrigin(corsRules),
+		AllowHeaders:    []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin"},
+		AllowMethods:    []string{"POST", "OPTIONS", "GET", "PUT", "DELETE"},
+	}))
 
 	root := r.Group("/api")
 	{
 		root.GET("/metrics", prom.Handler())
-		root.GET("/ping", api.Ping)
-		root.GET("/ping/bad", api.PingBad)
+		h.HandlerPing(root)
 	}
 
 	apiv1 := r.Group("/api/v1", middlewares.HttpMetricsMiddleware())
 	{
 		apiAuth := apiv1.Group("/auth")
 		{
-			apiAuth.GET("/ping", h.HandlerAuthPing)
+			h.HandlerAuthPing(apiAuth)
+			h.HandlerGoogleLogin(apiAuth)
+			h.HandlerAuthenticateGoogleRedirectOrigin(apiAuth)
 		}
-
-		apiv1.GET("/tags", v1.GetTags)
 	}
 
 	return r

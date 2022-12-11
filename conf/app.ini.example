@@ -1,18 +1,10 @@
 [app]
-PageSize = 10
-JwtSecret = 233
-PrefixUrl = http://127.0.0.1:8000
+ENV = development
+CORS = .*
+OS = mac
+JWTSecret = <redacted>
 
 BinaryRootPath = bin/
-
-# MB
-ImageMaxSize = 5
-ImageAllowExts = .jpg,.jpeg,.png
-
-ExportSavePath = export/
-QrCodeSavePath = qrcode/
-FontSavePath = fonts/
-
 LogSavePath = logs/
 LogSaveName = log-
 LogFileExt = log
@@ -23,8 +15,11 @@ ClientID = <redacted>
 SecretID = <redacted>
 RedirectURL = <redacted>
 
-[prometheus]
-Hostname = goauth_instance
+[consul]
+Address = host.docker.internal:8500
+ServiceName = auth_service
+HealthTTL = 30
+WatchTTL = 10
 
 [server]
 #debug or release
@@ -33,6 +28,14 @@ HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
 
+[redis]
+Host = goauth-redis:6379
+Password = redispassword
+MaxIdle = 30
+MaxActive = 30
+IdleTimeout = 200
+Salt = keysalted
+
 [database]
 Type = mysql
 User = root
@@ -40,10 +43,3 @@ Password = rootroot
 Host = 127.0.0.1:3306
 Name = blog
 TablePrefix = blog_
-
-[redis]
-Host = 127.0.0.1:6379
-Password =
-MaxIdle = 30
-MaxActive = 30
-IdleTimeout = 200

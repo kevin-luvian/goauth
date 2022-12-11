@@ -1,5 +1,5 @@
 # sensitive files
-conf/app.ini
+*/app.ini
 
 # Binaries for programs and plugins
 bin/

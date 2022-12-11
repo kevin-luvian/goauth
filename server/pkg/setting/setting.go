@@ -7,36 +7,29 @@ import (
 	"github.com/go-ini/ini"
 )
 
-type GoogleOAuth struct {
-	ClientID    string
-	SecretID    string
-	RedirectURL string
-}
+const (
+	ENV_DEVELOPMENT = "development"
+	ENV_STAGING     = "staging"
+	ENV_PRODUCTION  = "production"
+)
 
-var GoogleOAuthSetting = &GoogleOAuth{}
+const (
+	OS_MAC   = "mac"
+	OS_LINUX = "linux"
+)
 
-type App struct {
-	JwtSecret string
-	PageSize  int
-	PrefixUrl string
+type AppSetting struct {
+	ENV       string
+	CORS      string
+	JWTSecret string
+	OS        string
 
 	BinaryRootPath string
-
-	ImageSavePath  string
-	ImageMaxSize   int
-	ImageAllowExts []string
-
-	ExportSavePath string
-	QrCodeSavePath string
-	FontSavePath   string
-
-	LogSavePath string
-	LogSaveName string
-	LogFileExt  string
-	TimeFormat  string
+	LogSavePath    string
+	LogSaveName    string
+	LogFileExt     string
+	TimeFormat     string
 }
-
-var AppSetting = &App{}
 
 type Server struct {
 	RunMode      string
@@ -45,13 +38,11 @@ type Server struct {
 	WriteTimeout time.Duration
 }
 
-var ServerSetting = &Server{}
-
-type Prometheus struct {
-	Hostname string
+type GoogleOAuthSetting struct {
+	ClientID    string
+	SecretID    string
+	RedirectURL string
 }
-
-var PrometheusSetting = &Prometheus{}
 
 type Database struct {
 	Type        string
@@ -62,17 +53,31 @@ type Database struct {
 	TablePrefix string
 }
 
-var DatabaseSetting = &Database{}
+type ConsulSetting struct {
+	Address     string
+	ServiceName string
+	HealthTTL   time.Duration
+	WatchTTL    time.Duration
+}
 
-type Redis struct {
+type RedisSetting struct {
 	Host        string
 	Password    string
 	MaxIdle     int
 	MaxActive   int
 	IdleTimeout time.Duration
+	Salt        string
 }
 
-var RedisSetting = &Redis{}
+var (
+	App           = &AppSetting{}
+	GoogleOAuth   = &GoogleOAuthSetting{}
+	ServerSetting = &Server{}
+	Consul        = &ConsulSetting{}
+	Redis         = &RedisSetting{}
+
+	DatabaseSetting = &Database{}
+)
 
 var cfg *ini.File
 
@@ -84,17 +89,22 @@ func Setup() {
 		log.Fatalf("setting.Setup, fail to parse 'conf/app.ini': %v", err)
 	}
 
-	mapTo("app", AppSetting)
+	mapTo("app", App)
 	mapTo("server", ServerSetting)
-	mapTo("prometheus", PrometheusSetting)
+	mapTo("consul", Consul)
 	mapTo("database", DatabaseSetting)
-	mapTo("redis", RedisSetting)
-	mapTo("google-oauth", GoogleOAuthSetting)
+	mapTo("redis", Redis)
+	mapTo("google-oauth", GoogleOAuth)
 
-	AppSetting.ImageMaxSize = AppSetting.ImageMaxSize * 1024 * 1024
+	App.ENV = getEnv(App.ENV)
+
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
-	RedisSetting.IdleTimeout = RedisSetting.IdleTimeout * time.Second
+
+	Redis.IdleTimeout = Redis.IdleTimeout * time.Second
+
+	Consul.HealthTTL = Consul.HealthTTL * time.Second
+	Consul.WatchTTL = Consul.WatchTTL * time.Second
 }
 
 // mapTo map section
@@ -102,5 +112,16 @@ func mapTo(section string, v interface{}) {
 	err := cfg.Section(section).MapTo(v)
 	if err != nil {
 		log.Fatalf("Cfg.MapTo %s err: %v", section, err)
+	}
+}
+
+func getEnv(env string) string {
+	switch env {
+	case ENV_PRODUCTION:
+		return ENV_PRODUCTION
+	case ENV_STAGING:
+		return ENV_STAGING
+	default:
+		return ENV_DEVELOPMENT
 	}
 }

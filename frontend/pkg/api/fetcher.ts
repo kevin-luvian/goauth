@@ -9,8 +9,10 @@ interface APIResponse {
   error: Error | null;
 }
 
+export const BaseAPI = "http://localhost:8000/api";
+
 export const GetAPI = async (url: string): Promise<APIResponse> =>
-  fetch(url, {
+  fetch(BaseAPI + url, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   })
@@ -31,7 +33,7 @@ export const PostAPI = async ({
   body,
 }: APIProps): Promise<APIResponse> => {
   try {
-    const res = await fetch(url, {
+    const res = await fetch(BaseAPI + url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

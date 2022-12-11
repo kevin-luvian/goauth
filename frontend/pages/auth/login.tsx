@@ -7,13 +7,8 @@ import API from "../../pkg/api";
 
 const Page: NextPageWithLayout = () => {
   const handleGoogleLogin = async () => {
-    console.log("Google Login Button Clicked!!");
-    // const res = await API.Auth.GoogleLogin();
-    const res = await API.Auth.GoogleLoginGET();
-    console.log("GoogleLogin", res);
-    if (res.error) {
-      console.log("GoogleLogin Error Msg", res.error.message);
-    }
+    const url = API.Auth.GetGoogleLoginURL();
+    window.location.replace(url);
   };
 
   return (

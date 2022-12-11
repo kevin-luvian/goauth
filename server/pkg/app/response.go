@@ -25,11 +25,10 @@ func Success(c *gin.Context, data interface{}) {
 	})
 }
 
-// Response setting gin.JSON
-func (g *Gin) Response(httpCode, errCode int, data interface{}) {
-	g.C.JSON(httpCode, Response{
-		Code: errCode,
-		Msg:  e.GetMsg(errCode),
-		Data: data,
+func Error(c *gin.Context, code int, err error) {
+	c.JSON(e.GetStatus(code), Response{
+		Code: e.SUCCESS,
+		Msg:  e.GetMsg(code),
+		Data: err.Error(),
 	})
 }

@@ -12,7 +12,7 @@ import (
 var (
 	DefaultCallerDepth = 2
 
-	logger *logrus.Logger
+	logger *logrus.Logger = logrus.New()
 )
 
 // Setup initialize the log instance
@@ -49,8 +49,8 @@ func Debugln(v ...interface{}) {
 }
 
 // Info output logs at info level
-func Infoln(v ...interface{}) {
-	addFields().Infoln(v...)
+func Infoln(args ...interface{}) {
+	addFields().Infoln(args...)
 }
 
 // Infof output logs at info level
@@ -61,6 +61,11 @@ func Infof(s string, v ...interface{}) {
 // Error output logs at error level
 func Errorln(v ...interface{}) {
 	addFields().Errorln(v...)
+}
+
+// Error output logs at error level
+func Errorf(format string, args ...interface{}) {
+	addFields().Errorf(format, args...)
 }
 
 // Fatal output logs at fatal level

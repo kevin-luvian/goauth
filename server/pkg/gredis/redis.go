@@ -1,8 +1,9 @@
 package gredis
 
 import (
-	"encoding/json"
-	"time"
+	gtime "time"
+
+	sredis "github.com/gin-contrib/sessions/redis"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
@@ -11,49 +12,62 @@ import (
 var RedisConn *redis.Pool
 
 // Setup Initialize the Redis instance
-func Setup() error {
+func Setup() {
+	s := setting.Redis
+
 	RedisConn = &redis.Pool{
-		MaxIdle:     setting.RedisSetting.MaxIdle,
-		MaxActive:   setting.RedisSetting.MaxActive,
-		IdleTimeout: setting.RedisSetting.IdleTimeout,
+		MaxIdle:     s.MaxIdle,
+		MaxActive:   s.MaxActive,
+		IdleTimeout: s.IdleTimeout,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", setting.RedisSetting.Host)
+			c, err := redis.Dial("tcp", s.Host)
 			if err != nil {
 				return nil, err
 			}
-			if setting.RedisSetting.Password != "" {
-				if _, err := c.Do("AUTH", setting.RedisSetting.Password); err != nil {
+			if s.Password != "" {
+				if _, err := c.Do("AUTH", s.Password); err != nil {
 					c.Close()
 					return nil, err
 				}
 			}
 			return c, err
 		},
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+		TestOnBorrow: func(c redis.Conn, t gtime.Time) error {
 			_, err := c.Do("PING")
 			return err
 		},
 	}
-
-	return nil
 }
 
-// Set a key/value
-func Set(key string, data interface{}, time int) error {
+func NewStore() (sredis.Store, error) {
+	s := setting.Redis
+
+	return sredis.NewStore(s.MaxIdle, "tcp", s.Host, s.Password, []byte(s.Salt))
+}
+
+func Ping() error {
 	conn := RedisConn.Get()
 	defer conn.Close()
 
-	value, err := json.Marshal(data)
+	_, err := redis.String(conn.Do("PING"))
+	return err
+}
+
+// Set a key/value
+func Set(key string, value string, time ...gtime.Duration) error {
+	if len(time) == 0 {
+		time = append(time, 10*gtime.Minute)
+	}
+
+	conn := RedisConn.Get()
+	defer conn.Close()
+
+	_, err := conn.Do("SET", key, value)
 	if err != nil {
 		return err
 	}
 
-	_, err = conn.Do("SET", key, value)
-	if err != nil {
-		return err
-	}
-
-	_, err = conn.Do("EXPIRE", key, time)
+	_, err = conn.Do("EXPIRE", key, time[0].Seconds())
 	if err != nil {
 		return err
 	}
@@ -75,13 +89,13 @@ func Exists(key string) bool {
 }
 
 // Get get a key
-func Get(key string) ([]byte, error) {
+func Get(key string) (string, error) {
 	conn := RedisConn.Get()
 	defer conn.Close()
 
-	reply, err := redis.Bytes(conn.Do("GET", key))
+	reply, err := redis.String(conn.Do("GET", key))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	return reply, nil
