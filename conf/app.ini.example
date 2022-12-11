@@ -17,7 +17,8 @@ RedirectURL = <redacted>
 [consul]
 Address = host.docker.internal:8500
 ServiceName = auth_service
-HealthTTL = 30
+RootFolder = auth_service
+HealthTTL = 60
 WatchTTL = 10
 
 [server]
@@ -33,7 +34,6 @@ Password = redispassword
 MaxIdle = 30
 MaxActive = 30
 IdleTimeout = 200
-Salt = keysalted
 
 [database]
 Type = mysql

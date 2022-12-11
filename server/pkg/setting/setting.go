@@ -55,6 +55,7 @@ type Database struct {
 type ConsulSetting struct {
 	Address     string
 	ServiceName string
+	RootFolder  string
 	HealthTTL   time.Duration
 	WatchTTL    time.Duration
 }

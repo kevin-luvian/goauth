@@ -60,49 +60,6 @@ func (h *Handler) HandlerAuthenticateGoogleRedirectOrigin(r gin.IRoutes) gin.IRo
 			return
 		}
 
-		// session.Set("google-referer", c.Request.Referer())
-
-		// if !strings.Contains(usr.Email, "@tokopedia.com") {
-		// 	errResponse(c, http.StatusUnauthorized, errors.New("unauthorized email address"))
-		// 	return
-		// }
-
-		// eng, err := h.engineer.GetByEmail(c, usr.Email)
-		// if err != nil {
-		// 	log.Error(err)
-		// }
-		// usr.User.EngineerID = eng.ID
-
-		// if eng.ID != 0 && usr.User.Access != user.FullAccess {
-		// 	rbacGroups, _ := h.getUserGroupNames(usr.Email)
-		// 	usr.Groups = rbacGroups
-		// }
-
-		// usr.RegisteredClaims = jwt.RegisteredClaims{
-		// 	ExpiresAt: jwt.NewNumericDate(expirationTime),
-		// }
-
-		// token := jwt.NewWithClaims(jwt.SigningMethodHS256, usr)
-		// tokenString, err := token.SignedString([]byte(h.secret))
-		// if err != nil {
-		// 	errResponse(c, http.StatusInternalServerError, err)
-		// 	return
-		// }
-
-		// referer, ok := store.Get("referer").(string)
-		// if !ok {
-		// 	errResponse(c, http.StatusInternalServerError, errors.New("invalid conversion"))
-		// 	return
-		// }
-
-		// token := "tokenaskdnaksnd"
-
-		// redirectURI := "h.redirectTo[urls.GetBaseURL(referer)]"
-		// if redirectURI == "" {
-		// 	app.Error(c, e.ERROR, errors.New("redirect uri not allowed"))
-		// 	return
-		// }
-
 		token, err := h.authUC.SignJWT(c, usr)
 		if err != nil {
 			app.Error(c, e.ERROR, err)

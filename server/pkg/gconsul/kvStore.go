@@ -2,7 +2,6 @@ package gconsul
 
 import (
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/kevin-luvian/goauth/server/pkg/logging"
@@ -13,14 +12,12 @@ import (
 type KVStore struct {
 	App struct {
 		JWTSecret string `json:"jwt_secret"`
-		CORS      string
-	}
+		CORS      string `json:"cors"`
+	} `json:"app"`
 	GoogleOauth struct {
 		SecretID string `json:"secret_id"`
 	} `json:"google_oauth"`
-	Redis struct {
-		Password string
-	}
+	Redis struct{} `json:"redis"`
 }
 
 var store KVStore
@@ -42,17 +39,11 @@ func FetchKV() (err error) {
 		setting.GoogleOAuth.SecretID = store.GoogleOauth.SecretID
 	}
 
-	if store.Redis.Password != "" {
-		setting.Redis.Password = store.Redis.Password
-	}
-
 	return nil
 }
 
 func WatchKV(f func()) {
 	checkKV := func() bool {
-		logging.Infoln("checking KV Store", setting.App.JWTSecret)
-
 		newStore, err := instance.fetchKVStore()
 		if err != nil {
 			logging.Errorln("fetching kv failed", err.Error())
@@ -80,7 +71,7 @@ func (c *Consul) fetchKVStore() (KVStore, error) {
 		return kvs, err
 	}
 
-	m = fillInMap(m, c.Name, func(path string) interface{} {
+	m = fillInMap(m, c.RootFolder, func(path string) interface{} {
 		kvpair, _, _ := c.ConsulKV.Get(path, nil)
 		if kvpair != nil {
 			return string(kvpair.Value)
@@ -101,7 +92,7 @@ func fillInMap(i interface{}, path string, getVal func(path string) interface{})
 	switch v := i.(type) {
 	case map[string]interface{}:
 		for key, val := range v {
-			v[key] = fillInMap(val, path+"/"+strings.ToLower(key), getVal)
+			v[key] = fillInMap(val, path+"/"+key, getVal)
 		}
 		return v
 	default:

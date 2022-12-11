@@ -9,6 +9,7 @@ import (
 
 type Consul struct {
 	Name        string
+	RootFolder  string
 	HealthTTL   time.Duration
 	WatchTTL    time.Duration
 	ConsulAgent *consul.Agent
@@ -32,6 +33,7 @@ func Setup(check func() error) error {
 
 	instance = &Consul{
 		Name:        setting.Consul.ServiceName,
+		RootFolder:  setting.Consul.RootFolder,
 		HealthTTL:   setting.Consul.HealthTTL,
 		WatchTTL:    setting.Consul.WatchTTL,
 		ConsulAgent: client.Agent(),
@@ -42,11 +44,12 @@ func Setup(check func() error) error {
 		ID:   instance.Name,
 		Name: instance.Name,
 		Check: &consul.AgentServiceCheck{
-			TTL: instance.HealthTTL.String(),
+			TTL:                            instance.HealthTTL.String(),
+			DeregisterCriticalServiceAfter: (instance.HealthTTL * 2).String(),
 		},
 	}
 
-	instance.ConsulAgent.ServiceDeregister(serviceDef.ID)
+	// instance.ConsulAgent.ServiceDeregister(serviceDef.ID)
 	err = instance.ConsulAgent.ServiceRegister(serviceDef)
 	if err != nil {
 		return err

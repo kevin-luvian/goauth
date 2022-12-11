@@ -6,6 +6,7 @@ import (
 	sredis "github.com/gin-contrib/sessions/redis"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
 )
 
@@ -36,6 +37,10 @@ func Setup() {
 			_, err := c.Do("PING")
 			return err
 		},
+	}
+
+	if err := Ping(); err != nil {
+		logging.Fatalln("Error redis setup", err)
 	}
 }
 

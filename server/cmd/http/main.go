@@ -39,9 +39,6 @@ func init() {
 
 	prom.Setup()
 	gredis.Setup()
-	if err := gredis.Ping(); err != nil {
-		logging.Fatalln("Error redis setup", err)
-	}
 }
 
 func main() {
@@ -86,14 +83,14 @@ func main() {
 			logging.Fatalln(err)
 		}
 
-		logging.Infoln("listening on", l.Addr())
+		logging.Infoln("listening on", server.Addr)
 
 		// Accept connections in a new goroutine.
 		go server.Serve(l)
 
 	} else {
 		// Resume accepting connections in a new goroutine.
-		logging.Infoln("resuming listening on", l.Addr())
+		logging.Infoln("resuming listening on", server.Addr)
 		go server.Serve(l)
 
 		// Kill the parent, now that the child has started successfully.

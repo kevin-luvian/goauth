@@ -4,7 +4,6 @@ package goagain
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -12,6 +11,7 @@ import (
 	"reflect"
 	"syscall"
 
+	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
 )
 
@@ -71,7 +71,7 @@ func Exec(l net.Listener) error {
 	); nil != err {
 		return err
 	}
-	log.Println("re-executing", argv0)
+	logging.Infoln("re-executing", argv0)
 	return syscall.Exec(argv0, os.Args, os.Environ())
 }
 
@@ -125,7 +125,7 @@ func ForkExec(l net.Listener) error {
 	if nil != err {
 		return err
 	}
-	log.Println("spawned child", p.Pid)
+	logging.Infoln("spawned child", p.Pid)
 	if err = os.Setenv("GOAGAIN_PID", fmt.Sprint(p.Pid)); nil != err {
 		return err
 	}
@@ -161,7 +161,7 @@ func Kill() error {
 	if syscall.SIGQUIT == sig && Double == Strategy {
 		go syscall.Wait4(pid, nil, 0, nil)
 	}
-	log.Println("sending signal", sig, "to process", pid)
+	logging.Infoln("sending signal", sig, "to process", pid)
 	return syscall.Kill(pid, sig)
 }
 
@@ -207,14 +207,14 @@ func Wait(l net.Listener) (syscall.Signal, error) {
 	forked := false
 	for {
 		sig := <-ch
-		log.Println(sig.String())
+		logging.Infoln("server signal", sig.String())
 		switch sig {
 
 		// SIGHUP should reload configuration.
 		case syscall.SIGHUP:
 			if nil != OnSIGHUP {
 				if err := OnSIGHUP(l); nil != err {
-					log.Println("OnSIGHUP:", err)
+					logging.Errorln("OnSIGHUP:", err)
 				}
 			}
 
@@ -234,7 +234,7 @@ func Wait(l net.Listener) (syscall.Signal, error) {
 		case syscall.SIGUSR1:
 			if nil != OnSIGUSR1 {
 				if err := OnSIGUSR1(l); nil != err {
-					log.Println("OnSIGUSR1:", err)
+					logging.Errorln("OnSIGUSR1:", err)
 				}
 			}
 
