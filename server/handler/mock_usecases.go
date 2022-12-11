@@ -5,7 +5,11 @@
 package handler
 
 import (
+	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
+	user "github.com/kevin-luvian/goauth/server/entity/user"
 )
 
 // MockIAuthUseCase is a mock of IAuthUseCase interface.
@@ -29,4 +33,48 @@ func NewMockIAuthUseCase(ctrl *gomock.Controller) *MockIAuthUseCase {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockIAuthUseCase) EXPECT() *MockIAuthUseCaseMockRecorder {
 	return m.recorder
+}
+
+// GetGoogleLoginURL mocks base method.
+func (m *MockIAuthUseCase) GetGoogleLoginURL(c context.Context, state string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGoogleLoginURL", c, state)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetGoogleLoginURL indicates an expected call of GetGoogleLoginURL.
+func (mr *MockIAuthUseCaseMockRecorder) GetGoogleLoginURL(c, state interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGoogleLoginURL", reflect.TypeOf((*MockIAuthUseCase)(nil).GetGoogleLoginURL), c, state)
+}
+
+// GetGoogleProfileInfo mocks base method.
+func (m *MockIAuthUseCase) GetGoogleProfileInfo(c context.Context, state, code string) (user.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGoogleProfileInfo", c, state, code)
+	ret0, _ := ret[0].(user.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGoogleProfileInfo indicates an expected call of GetGoogleProfileInfo.
+func (mr *MockIAuthUseCaseMockRecorder) GetGoogleProfileInfo(c, state, code interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGoogleProfileInfo", reflect.TypeOf((*MockIAuthUseCase)(nil).GetGoogleProfileInfo), c, state, code)
+}
+
+// SignJWT mocks base method.
+func (m *MockIAuthUseCase) SignJWT(c context.Context, usr user.User) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignJWT", c, usr)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignJWT indicates an expected call of SignJWT.
+func (mr *MockIAuthUseCaseMockRecorder) SignJWT(c, usr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignJWT", reflect.TypeOf((*MockIAuthUseCase)(nil).SignJWT), c, usr)
 }

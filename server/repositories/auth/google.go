@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/kevin-luvian/goauth/server/entity/google"
+	"github.com/kevin-luvian/goauth/server/entity"
 )
 
 // GoogleLoginURL get login url
@@ -14,8 +14,8 @@ func (r *Repo) GoogleLoginURL(ctx context.Context, state string) string {
 }
 
 // GetGoogleUserInfo get user info after authenticate
-func (r *Repo) GetGoogleUserInfo(ctx context.Context, code string) (google.UserInfo, error) {
-	var gUserInfo google.UserInfo
+func (r *Repo) GetGoogleUserInfo(ctx context.Context, code string) (entity.GoogleUserInfo, error) {
+	var gUserInfo entity.GoogleUserInfo
 
 	tok, err := r.oauth.Exchange(ctx, code)
 	if err != nil {

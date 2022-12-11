@@ -3,13 +3,13 @@ package auth
 import (
 	"context"
 
-	"github.com/kevin-luvian/goauth/server/entity/google"
+	"github.com/kevin-luvian/goauth/server/entity"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
 )
 
 type IAuthRepo interface {
 	GoogleLoginURL(ctx context.Context, state string) string
-	GetGoogleUserInfo(ctx context.Context, code string) (google.UserInfo, error)
+	GetGoogleUserInfo(ctx context.Context, code string) (entity.GoogleUserInfo, error)
 }
 
 type UseCase struct {

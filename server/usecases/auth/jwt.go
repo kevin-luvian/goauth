@@ -9,12 +9,6 @@ import (
 	"github.com/kevin-luvian/goauth/server/entity/user"
 )
 
-// usr            = struct {
-// 	user.User
-// 	user.AccessMapping
-// 	jwt.RegisteredClaims
-// }{}
-
 func (u *UseCase) SignJWT(c context.Context, usr user.User) (string, error) {
 	expirationTime := time.Now().Add(180 * time.Minute)
 

@@ -97,6 +97,7 @@ func Setup() {
 	mapTo("google-oauth", GoogleOAuth)
 
 	App.ENV = getEnv(App.ENV)
+	App.OS = getOS(App.OS)
 
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
@@ -123,5 +124,14 @@ func getEnv(env string) string {
 		return ENV_STAGING
 	default:
 		return ENV_DEVELOPMENT
+	}
+}
+
+func getOS(os string) string {
+	switch os {
+	case OS_MAC:
+		return OS_MAC
+	default:
+		return OS_LINUX
 	}
 }

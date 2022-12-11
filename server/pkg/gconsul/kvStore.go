@@ -14,7 +14,7 @@ type KVStore struct {
 		JWTSecret string `json:"jwt_secret"`
 		CORS      string `json:"cors"`
 	} `json:"app"`
-	GoogleOauth struct {
+	GoogleOAuth struct {
 		SecretID string `json:"secret_id"`
 	} `json:"google_oauth"`
 	Redis struct{} `json:"redis"`
@@ -28,16 +28,10 @@ func FetchKV() (err error) {
 		return err
 	}
 
-	if store.App.JWTSecret != "" {
-		setting.App.JWTSecret = store.App.JWTSecret
-	}
-	if store.App.CORS != "" {
-		setting.App.CORS = store.App.CORS
-	}
+	setting.App.JWTSecret = nEmptyFill(setting.App.JWTSecret, store.App.JWTSecret)
+	setting.App.CORS = nEmptyFill(setting.App.CORS, store.App.CORS)
 
-	if store.GoogleOauth.SecretID != "" {
-		setting.GoogleOAuth.SecretID = store.GoogleOauth.SecretID
-	}
+	setting.GoogleOAuth.SecretID = nEmptyFill(setting.GoogleOAuth.SecretID, store.GoogleOAuth.SecretID)
 
 	return nil
 }
@@ -98,4 +92,11 @@ func fillInMap(i interface{}, path string, getVal func(path string) interface{})
 	default:
 		return getVal(path)
 	}
+}
+
+func nEmptyFill(base, new string) string {
+	if new != "" {
+		return new
+	}
+	return base
 }

@@ -1,22 +1,29 @@
 package gredis
 
 import (
+	"errors"
 	gtime "time"
-
-	sredis "github.com/gin-contrib/sessions/redis"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
-var RedisConn *redis.Pool
+const (
+	DefaultTTL = 10 * gtime.Minute
+)
+
+var (
+	ErrNoKey  = errors.New("redis missing key")
+	redisPool *redis.Pool
+)
 
 // Setup Initialize the Redis instance
 func Setup() {
 	s := setting.Redis
 
-	RedisConn = &redis.Pool{
+	redisPool = &redis.Pool{
 		MaxIdle:     s.MaxIdle,
 		MaxActive:   s.MaxActive,
 		IdleTimeout: s.IdleTimeout,
@@ -44,14 +51,8 @@ func Setup() {
 	}
 }
 
-func NewStore() (sredis.Store, error) {
-	s := setting.Redis
-
-	return sredis.NewStore(s.MaxIdle, "tcp", s.Host, s.Password, []byte(s.Salt))
-}
-
 func Ping() error {
-	conn := RedisConn.Get()
+	conn := redisPool.Get()
 	defer conn.Close()
 
 	_, err := redis.String(conn.Do("PING"))
@@ -61,10 +62,10 @@ func Ping() error {
 // Set a key/value
 func Set(key string, value string, time ...gtime.Duration) error {
 	if len(time) == 0 {
-		time = append(time, 10*gtime.Minute)
+		time = append(time, DefaultTTL)
 	}
 
-	conn := RedisConn.Get()
+	conn := redisPool.Get()
 	defer conn.Close()
 
 	_, err := conn.Do("SET", key, value)
@@ -80,9 +81,66 @@ func Set(key string, value string, time ...gtime.Duration) error {
 	return nil
 }
 
+func SetStruct(key string, value interface{}, time ...gtime.Duration) error {
+	if len(time) == 0 {
+		time = append(time, DefaultTTL)
+	}
+
+	conn := redisPool.Get()
+	defer conn.Close()
+
+	enc, err := msgpack.Marshal(value)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Do("SET", key, enc)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Do("EXPIRE", key, time[0].Seconds())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Get get a key
+func Get(key string) (string, error) {
+	conn := redisPool.Get()
+	defer conn.Close()
+
+	reply, err := redis.String(conn.Do("GET", key))
+	if err == redis.ErrNil {
+		return "", ErrNoKey
+	} else if err != nil {
+		return "", err
+	}
+
+	return reply, nil
+}
+
+// GetStruct get a key
+func GetStruct(key string, target interface{}) error {
+	conn := redisPool.Get()
+	defer conn.Close()
+
+	buf, err := redis.Bytes(conn.Do("GET", key))
+	if err == redis.ErrNil {
+		return ErrNoKey
+	} else if err != nil {
+		return err
+	}
+
+	err = msgpack.Unmarshal(buf, target)
+	return err
+}
+
 // Exists check a key
 func Exists(key string) bool {
-	conn := RedisConn.Get()
+	conn := redisPool.Get()
 	defer conn.Close()
 
 	exists, err := redis.Bool(conn.Do("EXISTS", key))
@@ -93,22 +151,9 @@ func Exists(key string) bool {
 	return exists
 }
 
-// Get get a key
-func Get(key string) (string, error) {
-	conn := RedisConn.Get()
-	defer conn.Close()
-
-	reply, err := redis.String(conn.Do("GET", key))
-	if err != nil {
-		return "", err
-	}
-
-	return reply, nil
-}
-
 // Delete delete a kye
 func Delete(key string) (bool, error) {
-	conn := RedisConn.Get()
+	conn := redisPool.Get()
 	defer conn.Close()
 
 	return redis.Bool(conn.Do("DEL", key))
@@ -116,7 +161,7 @@ func Delete(key string) (bool, error) {
 
 // LikeDeletes batch delete
 func LikeDeletes(key string) error {
-	conn := RedisConn.Get()
+	conn := redisPool.Get()
 	defer conn.Close()
 
 	keys, err := redis.Strings(conn.Do("KEYS", "*"+key+"*"))

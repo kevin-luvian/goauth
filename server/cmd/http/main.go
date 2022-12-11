@@ -44,6 +44,7 @@ func init() {
 func main() {
 	gin.SetMode(setting.ServerSetting.RunMode)
 
+	// setup dependencies config
 	ga := &oauth2.Config{
 		ClientID:     setting.GoogleOAuth.ClientID,
 		ClientSecret: setting.GoogleOAuth.SecretID,
@@ -55,12 +56,15 @@ func main() {
 		Endpoint: google.Endpoint,
 	}
 
+	// setup repositories
 	authRepo := authRepo.New(ga)
 
+	// setup usecases
 	authUC := authUC.New(authUC.Dependencies{
 		AuthRepo: authRepo,
 	})
 
+	// setup handler
 	h := handler.New(handler.Dependencies{
 		AuthUC: authUC,
 	})
@@ -84,8 +88,6 @@ func main() {
 		}
 
 		logging.Infoln("listening on", server.Addr)
-
-		// Accept connections in a new goroutine.
 		go server.Serve(l)
 
 	} else {

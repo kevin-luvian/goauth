@@ -30,15 +30,3 @@ func StructToMap(t interface{}) (map[string]interface{}, error) {
 
 	return m, nil
 }
-
-func FillIn(i interface{}, path string, getVal func(path string) interface{}) interface{} {
-	switch v := i.(type) {
-	case map[string]interface{}:
-		for key, val := range v {
-			v[key] = FillIn(val, path+"/"+key, getVal)
-		}
-		return v
-	default:
-		return getVal(path)
-	}
-}
