@@ -4,7 +4,6 @@ CORS = .*
 OS = mac
 JWTSecret = <redacted>
 
-BinaryRootPath = bin/
 LogSavePath = logs/
 LogSaveName = log-
 LogFileExt = log

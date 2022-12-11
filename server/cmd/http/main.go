@@ -123,6 +123,6 @@ func main() {
 		logging.Fatalln(err)
 	}
 
-	logging.Infoln("closing http server on %s", server.Addr)
+	logging.Infoln("closing http server on", server.Addr)
 	time.Sleep(1 * time.Second)
 }

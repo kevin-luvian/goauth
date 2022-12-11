@@ -24,11 +24,10 @@ type AppSetting struct {
 	JWTSecret string
 	OS        string
 
-	BinaryRootPath string
-	LogSavePath    string
-	LogSaveName    string
-	LogFileExt     string
-	TimeFormat     string
+	LogSavePath string
+	LogSaveName string
+	LogFileExt  string
+	TimeFormat  string
 }
 
 type Server struct {
