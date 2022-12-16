@@ -43,9 +43,23 @@ services:
     restart: unless-stopped
     ports:
       - 8002:6379
+  goauth-pg:
+    container_name: goauth-pg
+    image: postgres:10.12-alpine
+    environment:
+      POSTGRES_DB: goauth
+      POSTGRES_PASSWORD: dbpass
+      POSTGRES_USER: dbuser
+      PGDATA: /var/lib/postgresql/data/goauth
+    volumes: 
+      - db:/var/lib/postgresql/data
+    ports:
+      - 8003:5432
+    restart: unless-stopped
 volumes:
   gomod:
   gocache:
+  db:
 networks:
   default:
     name: goauth-net

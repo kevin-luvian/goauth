@@ -43,13 +43,9 @@ type GoogleOAuthSetting struct {
 	RedirectURL string
 }
 
-type Database struct {
-	Type        string
-	User        string
-	Password    string
-	Host        string
-	Name        string
-	TablePrefix string
+type DatabaseSetting struct {
+	LocalURL  string
+	DockerURL string
 }
 
 type ConsulSetting struct {
@@ -76,7 +72,7 @@ var (
 	Consul        = &ConsulSetting{}
 	Redis         = &RedisSetting{}
 
-	DatabaseSetting = &Database{}
+	Database = &DatabaseSetting{}
 )
 
 var cfg *ini.File
@@ -92,7 +88,7 @@ func Setup() {
 	mapTo("app", App)
 	mapTo("server", ServerSetting)
 	mapTo("consul", Consul)
-	mapTo("database", DatabaseSetting)
+	mapTo("database", Database)
 	mapTo("redis", Redis)
 	mapTo("google-oauth", GoogleOAuth)
 

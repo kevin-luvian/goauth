@@ -12,6 +12,11 @@ generate:
 	@go generate ./...
 	@echo "${NOW} === GENERATED ==="
 
+migrate:
+	@echo "${NOW} === RUNNING MIGRATION ==="
+	@go run ./server/cmd/migrator
+	@echo "${NOW} === MIGRATED ==="
+
 .PHONY: dev
 dev:
 	@echo "${NOW} === RUNNING DEVELOPMENT ENV ==="
@@ -23,6 +28,11 @@ dev-all:
 	@echo "${NOW} === RUNNING DEVELOPMENT ALL ==="
 	@cd tools/ && docker-compose stop && docker-compose up -d
 	@docker-compose stop && docker-compose up -d
+
+dev-db:
+	@echo "${NOW} === RUNNING DEVELOPMENT DB ==="
+	@docker-compose stop goauth-pg && docker-compose up -d goauth-pg
+	@echo "${NOW} === DONE ==="
 
 dev-fe:
 	@echo "${NOW} === RUNNING DEVELOPMENT ENV ==="
