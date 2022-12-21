@@ -1,4 +1,4 @@
-package entity
+package google
 
 import "github.com/kevin-luvian/goauth/server/pkg/util"
 

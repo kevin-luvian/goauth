@@ -8,6 +8,13 @@ import (
 	"github.com/rafaeljusto/redigomock"
 )
 
+func TestRedis_Setup(t *testing.T) {
+	// invalid settings panic
+	assert.Panic(t, func() {
+		Setup()
+	})
+}
+
 func TestRedis_Ping(t *testing.T) {
 	tests := []struct {
 		name    string

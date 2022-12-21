@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	google "github.com/kevin-luvian/goauth/server/entity/google"
 	user "github.com/kevin-luvian/goauth/server/entity/user"
 )
 
@@ -35,46 +36,77 @@ func (m *MockIAuthUseCase) EXPECT() *MockIAuthUseCaseMockRecorder {
 	return m.recorder
 }
 
-// GetGoogleLoginURL mocks base method.
-func (m *MockIAuthUseCase) GetGoogleLoginURL(c context.Context, state string) string {
+// GetByEmail mocks base method.
+func (m *MockIAuthUseCase) GetByEmail(ctx context.Context, email string) (user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGoogleLoginURL", c, state)
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetGoogleLoginURL indicates an expected call of GetGoogleLoginURL.
-func (mr *MockIAuthUseCaseMockRecorder) GetGoogleLoginURL(c, state interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGoogleLoginURL", reflect.TypeOf((*MockIAuthUseCase)(nil).GetGoogleLoginURL), c, state)
-}
-
-// GetGoogleProfileInfo mocks base method.
-func (m *MockIAuthUseCase) GetGoogleProfileInfo(c context.Context, state, code string) (user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGoogleProfileInfo", c, state, code)
+	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
 	ret0, _ := ret[0].(user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetGoogleProfileInfo indicates an expected call of GetGoogleProfileInfo.
-func (mr *MockIAuthUseCaseMockRecorder) GetGoogleProfileInfo(c, state, code interface{}) *gomock.Call {
+// GetByEmail indicates an expected call of GetByEmail.
+func (mr *MockIAuthUseCaseMockRecorder) GetByEmail(ctx, email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGoogleProfileInfo", reflect.TypeOf((*MockIAuthUseCase)(nil).GetGoogleProfileInfo), c, state, code)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockIAuthUseCase)(nil).GetByEmail), ctx, email)
 }
 
-// SignJWT mocks base method.
-func (m *MockIAuthUseCase) SignJWT(c context.Context, usr user.User) (string, error) {
+// GetGoogleProfileInfo mocks base method.
+func (m *MockIAuthUseCase) GetGoogleProfileInfo(ctx context.Context, code string) (google.GoogleUserInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignJWT", c, usr)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetGoogleProfileInfo", ctx, code)
+	ret0, _ := ret[0].(google.GoogleUserInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SignJWT indicates an expected call of SignJWT.
-func (mr *MockIAuthUseCaseMockRecorder) SignJWT(c, usr interface{}) *gomock.Call {
+// GetGoogleProfileInfo indicates an expected call of GetGoogleProfileInfo.
+func (mr *MockIAuthUseCaseMockRecorder) GetGoogleProfileInfo(ctx, code interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignJWT", reflect.TypeOf((*MockIAuthUseCase)(nil).SignJWT), c, usr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGoogleProfileInfo", reflect.TypeOf((*MockIAuthUseCase)(nil).GetGoogleProfileInfo), ctx, code)
+}
+
+// GoogleRedirectURL mocks base method.
+func (m *MockIAuthUseCase) GoogleRedirectURL(ctx context.Context, state string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GoogleRedirectURL", ctx, state)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GoogleRedirectURL indicates an expected call of GoogleRedirectURL.
+func (mr *MockIAuthUseCaseMockRecorder) GoogleRedirectURL(ctx, state interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GoogleRedirectURL", reflect.TypeOf((*MockIAuthUseCase)(nil).GoogleRedirectURL), ctx, state)
+}
+
+// SignJWT mocks base method.
+func (m *MockIAuthUseCase) SignJWT(ctx context.Context, usr user.User) (string, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignJWT", ctx, usr)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// SignJWT indicates an expected call of SignJWT.
+func (mr *MockIAuthUseCaseMockRecorder) SignJWT(ctx, usr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignJWT", reflect.TypeOf((*MockIAuthUseCase)(nil).SignJWT), ctx, usr)
+}
+
+// Signup mocks base method.
+func (m *MockIAuthUseCase) Signup(ctx context.Context, tag, name, email string) (user.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Signup", ctx, tag, name, email)
+	ret0, _ := ret[0].(user.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Signup indicates an expected call of Signup.
+func (mr *MockIAuthUseCaseMockRecorder) Signup(ctx, tag, name, email interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Signup", reflect.TypeOf((*MockIAuthUseCase)(nil).Signup), ctx, tag, name, email)
 }

@@ -3,7 +3,12 @@ package util
 import (
 	"math/rand"
 	"reflect"
+	"time"
 )
+
+func Setup() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type CompareFunc func(i int, first interface{}, second interface{}) bool
 

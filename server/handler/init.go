@@ -27,3 +27,16 @@ func (h *Handler) HandlerPing(r gin.IRoutes) gin.IRoutes {
 		})
 	})
 }
+
+func setRefreshTokenCookie(c *gin.Context, refreshToken string) {
+	c.SetCookie("refresh-token", refreshToken, 0, "/", "", true, true)
+}
+
+func getRefreshTokenCookie(c *gin.Context) string {
+	tok, err := c.Cookie("refresh-token")
+	if err != nil {
+		return ""
+	}
+
+	return tok
+}

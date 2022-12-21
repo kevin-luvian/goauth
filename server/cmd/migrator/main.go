@@ -27,7 +27,7 @@ func init() {
 func main() {
 	m, err := migrate.New("file://migrations", setting.Database.LocalURL)
 	if err != nil {
-		logging.Errorf("Error making migration '%s'", err)
+		logging.Errorf("Error making migration %s", err)
 		os.Exit(1)
 	}
 
@@ -36,7 +36,7 @@ func main() {
 	rootCmd.AddCommand(cmd.MigrateDown(m))
 
 	if err := rootCmd.Execute(); err != nil {
-		logging.Errorf("Whoops. There was an error while executing your CLI '%s'", err)
+		logging.Errorf("Whoops. There was an error while executing CLI '%s'", err)
 		os.Exit(1)
 	}
 }

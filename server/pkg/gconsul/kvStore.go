@@ -1,9 +1,6 @@
 package gconsul
 
 import (
-	"reflect"
-	"time"
-
 	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
 	"github.com/kevin-luvian/goauth/server/pkg/util"
@@ -11,8 +8,9 @@ import (
 
 type KVStore struct {
 	App struct {
-		JWTSecret string `json:"jwt_secret"`
-		CORS      string `json:"cors"`
+		JWTAccessSecret  string `json:"jwt_access_secret"`
+		JWTRefreshSecret string `json:"jwt_refresh_secret"`
+		CORS             string `json:"cors"`
 	} `json:"app"`
 	GoogleOAuth struct {
 		SecretID string `json:"secret_id"`
@@ -20,15 +18,18 @@ type KVStore struct {
 	Redis struct{} `json:"redis"`
 }
 
-var store KVStore
+var storeHash string
 
-func FetchKV() (err error) {
-	store, err = instance.fetchKVStore()
+func FetchKV() error {
+	store, err := instance.fetchKVStore()
 	if err != nil {
 		return err
 	}
 
-	setting.App.JWTSecret = nEmptyFill(setting.App.JWTSecret, store.App.JWTSecret)
+	storeHash = util.EncodeMD5(store)
+
+	setting.App.JWTAccessSecret = nEmptyFill(setting.App.JWTAccessSecret, store.App.JWTAccessSecret)
+	setting.App.JWTRefreshSecret = nEmptyFill(setting.App.JWTRefreshSecret, store.App.JWTRefreshSecret)
 	setting.App.CORS = nEmptyFill(setting.App.CORS, store.App.CORS)
 
 	setting.GoogleOAuth.SecretID = nEmptyFill(setting.GoogleOAuth.SecretID, store.GoogleOAuth.SecretID)
@@ -36,25 +37,16 @@ func FetchKV() (err error) {
 	return nil
 }
 
-func WatchKV(f func()) {
-	checkKV := func() bool {
-		newStore, err := instance.fetchKVStore()
-		if err != nil {
-			logging.Errorln("fetching kv failed", err.Error())
-			return false
-		}
-
-		return reflect.DeepEqual(store, newStore)
+func HasKVChanged() bool {
+	newStore, err := instance.fetchKVStore()
+	if err != nil {
+		logging.Errorln("fetching kv failed", err.Error())
+		return false
 	}
 
-	go func() {
-		ticker := time.NewTicker(instance.WatchTTL)
-		for range ticker.C {
-			if !checkKV() {
-				f()
-			}
-		}
-	}()
+	newStoreHash := util.EncodeMD5(newStore)
+
+	return storeHash != newStoreHash
 }
 
 func (c *Consul) fetchKVStore() (KVStore, error) {

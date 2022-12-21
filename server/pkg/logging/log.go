@@ -2,8 +2,8 @@ package logging
 
 import (
 	"fmt"
-	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ttys3/rotatefilehook"
@@ -22,7 +22,9 @@ func Setup() {
 	logger = logrus.New()
 
 	logger.SetFormatter(&logrus.TextFormatter{
-		DisableTimestamp: true,
+		DisableTimestamp: false,
+		FullTimestamp:    true,
+		TimestampFormat:  "15:04:05",
 		PadLevelText:     true,
 		DisableSorting:   true,
 	})
@@ -44,8 +46,8 @@ func Setup() {
 }
 
 // Info output logs at info level
-func Debugln(v ...interface{}) {
-	addFields().Debugln(v...)
+func Debugln(args ...interface{}) {
+	addFields().Debugln(args...)
 }
 
 // Info output logs at info level
@@ -54,13 +56,23 @@ func Infoln(args ...interface{}) {
 }
 
 // Infof output logs at info level
-func Infof(s string, v ...interface{}) {
-	addFields().Infof(s, v...)
+func Infof(format string, args ...interface{}) {
+	addFields().Infof(format, args...)
+}
+
+// Info output logs at info level
+func Warnf(format string, args ...interface{}) {
+	addFields().Warnf(format, args...)
+}
+
+// Info output logs at info level
+func Warnln(args ...interface{}) {
+	addFields().Warnln(args...)
 }
 
 // Error output logs at error level
-func Errorln(v ...interface{}) {
-	addFields().Errorln(v...)
+func Errorln(args ...interface{}) {
+	addFields().Errorln(args...)
 }
 
 // Error output logs at error level
@@ -69,8 +81,9 @@ func Errorf(format string, args ...interface{}) {
 }
 
 // Fatal output logs at fatal level
-func Fatalln(v ...interface{}) {
-	addFields().Fatalln(v...)
+func Fatalln(args ...interface{}) {
+	addFields().Logln(logrus.FatalLevel, args...)
+	panic(1)
 }
 
 // setPrefix set the prefix of the log output
@@ -79,11 +92,11 @@ func addFields() *logrus.Entry {
 
 	_, file, line, ok := runtime.Caller(DefaultCallerDepth)
 	if ok {
-		base := filepath.Base(filepath.Dir(file))
-		file = filepath.Base(file)
+		baseIndex := strings.LastIndex(file, "/server") + len("/server")
+		file = file[baseIndex:]
 
 		fields = logrus.Fields{
-			"caller": fmt.Sprintf("%s/%s:%d", base, file, line),
+			"caller": fmt.Sprintf("%s:%d", file, line),
 		}
 	}
 

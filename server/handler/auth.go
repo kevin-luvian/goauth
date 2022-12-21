@@ -1,17 +1,17 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kevin-luvian/goauth/server/entity"
+	"github.com/kevin-luvian/goauth/server/entity/google"
+	"github.com/kevin-luvian/goauth/server/entity/user"
 	"github.com/kevin-luvian/goauth/server/pkg/app"
 	"github.com/kevin-luvian/goauth/server/pkg/e"
 	"github.com/kevin-luvian/goauth/server/pkg/gredis"
-	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/util"
 )
 
@@ -25,87 +25,131 @@ func (h *Handler) HandlerAuthPing(r gin.IRoutes) gin.IRoutes {
 
 func (h *Handler) HandlerGoogleSignup(r gin.IRoutes) gin.IRoutes {
 	return r.GET("/signup/google", func(c *gin.Context) {
-		state := util.RandString(32)
-
-		redirect := h.authUC.GetGoogleLoginURL(c, state)
-
-		data := entity.GoogleOAuthState{
-			Referer: c.Request.Referer(),
-			Type:    entity.GoogleSignup,
+		parsed, err := url.Parse(c.Request.Referer())
+		if err != nil {
+			app.Error(c, e.ERROR, err)
+			return
 		}
 
-		gredis.SetStruct(e.CACHE_GOOGLE_STATE+state, data, 5*time.Minute)
+		referer := parsed.Scheme + "://" + parsed.Host + "/redirect"
 
-		c.Header("Referer", c.Request.URL.String())
+		data := google.GoogleOAuthState{
+			Referer: referer,
+			Type:    google.GoogleSignup,
+		}
+
+		state := util.RandString(30)
+		err = gredis.SetStruct(e.CACHE_GOOGLE_STATE+state, data, 12*time.Hour)
+		if err != nil {
+			app.Error(c, e.ERROR, err)
+			return
+		}
+
+		redirect := h.authUC.GoogleRedirectURL(c, state)
+
 		c.Redirect(http.StatusTemporaryRedirect, redirect)
 	})
 }
 
 func (h *Handler) HandlerGoogleLogin(r gin.IRoutes) gin.IRoutes {
 	return r.GET("/login/google", func(c *gin.Context) {
-		state := util.RandString(32)
-
-		redirect := h.authUC.GetGoogleLoginURL(c, state)
-
-		data := entity.GoogleOAuthState{
-			Referer: c.Request.Referer(),
-			Type:    entity.GoogleLogin,
+		parsed, err := url.Parse(c.Request.Referer())
+		if err != nil {
+			app.Error(c, e.ERROR, err)
+			return
 		}
 
-		gredis.SetStruct(e.CACHE_GOOGLE_STATE+state, data)
+		referer := parsed.Scheme + "://" + parsed.Host + "/redirect"
+		state := util.RandString(30)
+		redirect := h.authUC.GoogleRedirectURL(c, state)
+		data := google.GoogleOAuthState{
+			Referer: referer,
+			Type:    google.GoogleLogin,
+		}
 
-		logging.Infoln("c.Request.Referer()", c.Request.Referer())
+		gredis.SetStruct(e.CACHE_GOOGLE_STATE+state, data, 12*time.Hour)
 
-		c.Header("Referer", c.Request.URL.String())
 		c.Redirect(http.StatusTemporaryRedirect, redirect)
 	})
 }
 
 func (h *Handler) HandlerAuthenticateGoogleRedirectOrigin(r gin.IRoutes) gin.IRoutes {
-	return r.GET("/login/google/redirect", func(c *gin.Context) {
-		var err error
+	return r.GET("/redirect/google", func(c *gin.Context) {
+		var (
+			referer string
+			err     error
+		)
+
+		// redirect return
+		redirectError := func(err error) {
+			redirectLocation := fmt.Sprintf("%s?err=%s", referer, err.Error())
+			c.Redirect(http.StatusTemporaryRedirect, redirectLocation)
+		}
 
 		state := c.Query("state")
 		code := c.Query("code")
-		cacheData := entity.GoogleOAuthState{}
+		cacheData := google.GoogleOAuthState{}
 
 		// check state
 		err = gredis.GetStruct(e.CACHE_GOOGLE_STATE+state, &cacheData)
+		if err != nil {
+			app.Error(c, e.ERROR, err)
+			return
+		}
+
+		referer = cacheData.Referer
+
+		gredis.Delete(e.CACHE_GOOGLE_STATE + state)
+
+		gInfo, err := h.authUC.GetGoogleProfileInfo(c, code)
+		if err != nil {
+			redirectError(err)
+			return
+		}
+
+		var usr user.User = user.User{}
+		if cacheData.Type == google.GoogleSignup {
+			usr, err = h.authUC.Signup(c, "", gInfo.Name, gInfo.Email)
+			if err != nil {
+				redirectError(err)
+				return
+			}
+		} else if cacheData.Type == google.GoogleLogin {
+			usr, err = h.authUC.GetByEmail(c, gInfo.Email)
+			if err != nil {
+				redirectError(err)
+				return
+			}
+		}
+
+		accessToken, refreshToken, err := h.authUC.SignJWT(c, usr)
+		if err != nil {
+			redirectError(err)
+			return
+		}
+
+		redirectLocation := fmt.Sprintf("%s?token=%s", referer, accessToken)
+		setRefreshTokenCookie(c, refreshToken)
+		c.Redirect(http.StatusTemporaryRedirect, redirectLocation)
+	})
+}
+
+func (h *Handler) HandlerRefreshToken(r gin.IRoutes) gin.IRoutes {
+	return r.GET("/refresh-token", func(c *gin.Context) {
+		refreshToken := getRefreshTokenCookie(c)
+		usr, err := h.authUC.ParseJWTRefreshToken(c, refreshToken)
 		if err != nil {
 			app.Error(c, e.FORBIDDEN, err)
 			return
 		}
 
-		gredis.Delete(e.CACHE_GOOGLE_STATE + state)
-
-		usr, err := h.authUC.GetGoogleProfileInfo(c, state, code)
+		accessToken, refreshToken, err := h.authUC.SignJWT(c, usr)
 		if err != nil {
 			app.Error(c, e.ERROR, err)
 			return
 		}
 
-		if cacheData.Type == entity.GoogleSignup {
-			// check if user not exists
-
-		} else if cacheData.Type == entity.GoogleLogin {
-			// check if user exists
-			app.Error(c, e.FORBIDDEN, errors.New("google login is not yet supported"))
-			return
-		}
-
-		token, err := h.authUC.SignJWT(c, usr)
-		if err != nil {
-			app.Error(c, e.ERROR, err)
-			return
-		}
-
-		redirectLocation := fmt.Sprintf("%s?token=%s", cacheData.Referer, token)
-
-		c.Redirect(http.StatusTemporaryRedirect, redirectLocation)
-		// app.Success(c, map[string]interface{}{
-		// 	"loc":   redirectLocation,
-		// 	"usr":   usr,
-		// 	"token": token,
-		// })
+		setRefreshTokenCookie(c, refreshToken)
+		app.Success(c, gin.H{"token": accessToken})
 	})
 }

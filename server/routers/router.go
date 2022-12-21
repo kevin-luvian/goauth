@@ -9,7 +9,6 @@ import (
 	"github.com/kevin-luvian/goauth/server/middlewares"
 	"github.com/kevin-luvian/goauth/server/pkg/prom"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
-	"github.com/kevin-luvian/goauth/server/pkg/util"
 )
 
 // InitRouter initialize routing information
@@ -23,9 +22,9 @@ func InitRouter(h *handler.Handler) *gin.Engine {
 	// 	logging.Infoln("Header Origin", or)
 	// })
 
-	corsRules := util.CreateCORSRule(strings.Split(setting.App.CORS, ";"))
+	corsRules := CreateCORSRule(strings.Split(setting.App.CORS, ";"))
 	r.Use(cors.New(cors.Config{
-		AllowOriginFunc: util.CheckOrigin(corsRules),
+		AllowOriginFunc: CheckOrigin(corsRules),
 		AllowHeaders:    []string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin"},
 		AllowMethods:    []string{"POST", "OPTIONS", "GET", "PUT", "DELETE"},
 	}))
@@ -42,6 +41,7 @@ func InitRouter(h *handler.Handler) *gin.Engine {
 		{
 			h.HandlerAuthPing(apiAuth)
 			h.HandlerGoogleLogin(apiAuth)
+			h.HandlerGoogleSignup(apiAuth)
 			h.HandlerAuthenticateGoogleRedirectOrigin(apiAuth)
 		}
 	}

@@ -12,8 +12,10 @@ func MigrateUp(m *migrate.Migrate) *cobra.Command {
 		Short: "Migrate up to latest",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := m.Up(); err != nil {
+			err := m.Up()
+			if err != nil {
 				logging.Errorln(err)
+				return
 			}
 
 			logging.Infoln("migrated up")
@@ -27,8 +29,10 @@ func MigrateDown(m *migrate.Migrate) *cobra.Command {
 		Short: "Migrate down to earliest",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := m.Down(); err != nil {
+			err := m.Down()
+			if err != nil {
 				logging.Errorln(err)
+				return
 			}
 
 			logging.Infoln("migrated down")

@@ -11,18 +11,13 @@ type Consul struct {
 	Name        string
 	RootFolder  string
 	HealthTTL   time.Duration
-	WatchTTL    time.Duration
 	ConsulAgent *consul.Agent
 	ConsulKV    *consul.KV
 }
 
-type Dependencies struct {
-	Check func() error
-}
-
 var instance = &Consul{}
 
-func Setup(check func() error) error {
+func Setup() error {
 	config := consul.DefaultConfig()
 	config.Address = setting.Consul.Address
 
@@ -34,8 +29,7 @@ func Setup(check func() error) error {
 	instance = &Consul{
 		Name:        setting.Consul.ServiceName,
 		RootFolder:  setting.Consul.RootFolder,
-		HealthTTL:   setting.Consul.HealthTTL,
-		WatchTTL:    setting.Consul.WatchTTL,
+		HealthTTL:   setting.App.TickerTTL,
 		ConsulAgent: client.Agent(),
 		ConsulKV:    client.KV(),
 	}
@@ -49,13 +43,10 @@ func Setup(check func() error) error {
 		},
 	}
 
-	// instance.ConsulAgent.ServiceDeregister(serviceDef.ID)
 	err = instance.ConsulAgent.ServiceRegister(serviceDef)
 	if err != nil {
 		return err
 	}
-
-	go instance.UpdateTTL(check)
 
 	return nil
 }

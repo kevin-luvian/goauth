@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	httpLabels = []string{"method", "code", "route"}
+	httpLabels     = []string{"method", "code", "route"}
+	functionLabels = []string{"fname", "file", "module"}
 )
 
 var requestsTotal = prometheus.NewCounterVec(
@@ -38,4 +39,13 @@ var responseSize = prometheus.NewSummaryVec(
 		Help: "Tracks the size of HTTP responses.",
 	},
 	httpLabels,
+)
+
+var functionsDuration = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "functions_duration_microseconds",
+		Help:    "Tracks the duration for functions calls in microseconds.",
+		Buckets: []float64{1000, 2500, 5000, 7000, 10000, 20000},
+	},
+	functionLabels,
 )

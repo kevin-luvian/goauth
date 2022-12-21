@@ -2,131 +2,88 @@ package auth
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
+	"github.com/kevin-luvian/goauth/server/entity/google"
+	"github.com/kevin-luvian/goauth/server/pkg/assert"
 	"golang.org/x/oauth2"
+	"gopkg.in/h2non/gock.v1"
 )
 
-// func TestRepo_GetGoogleUserInfo(t *testing.T) {
-// 	type fields struct {
-// 		oauth *oauth2.Config
-// 	}
-// 	type args struct {
-// 		ctx  context.Context
-// 		code string
-// 	}
-// 	tests := []struct {
-// 		name    string
-// 		fields  fields
-// 		args    args
-// 		mock    func(a args, mock *MockoauthInterface)
-// 		want    user.User
-// 		wantErr bool
-// 	}{
-// 		{
-// 			name: "Test Success",
-// 			fields: fields{
-// 				oauth: &oauth2.Config{
-// 					ClientID:     "client",
-// 					ClientSecret: "secret",
-// 					RedirectURL:  "http://localhost:8181/test",
-// 					Endpoint:     google.Endpoint,
-// 				},
-// 				db: nil,
-// 			},
-// 			args: args{},
-// 			mock: func(a args, mock *MockoauthInterface) {
-// 				mock.EXPECT().Exchange(a.ctx, a.code).Return(&oauth2.Token{}, nil)
-// 				mock.EXPECT().Client(a.ctx, gomock.Any()).Return(&http.Client{})
-// 				gock.New("https://www.googleapis.com/oauth2/v2/userinfo").
-// 					Reply(200).BodyString("{}")
-// 			},
-// 			want:    user.User{},
-// 			wantErr: false,
-// 		}, {
-// 			name: "Test Error - Exchange Token",
-// 			fields: fields{
-// 				oauth: &oauth2.Config{
-// 					ClientID:     "client",
-// 					ClientSecret: "secret",
-// 					RedirectURL:  "http://localhost:8181/test",
-// 					Endpoint:     google.Endpoint,
-// 				},
-// 				db: nil,
-// 			},
-// 			args: args{},
-// 			mock: func(a args, mock *MockoauthInterface) {
-// 				mock.EXPECT().Exchange(a.ctx, a.code).
-// 					Return(&oauth2.Token{}, errors.New("failed exchange token"))
-// 			},
-// 			want:    user.User{},
-// 			wantErr: true,
-// 		}, {
-// 			name: "Test Error - Parsing Response",
-// 			fields: fields{
-// 				oauth: &oauth2.Config{
-// 					ClientID:     "client",
-// 					ClientSecret: "secret",
-// 					RedirectURL:  "http://localhost:8181/test",
-// 					Endpoint:     google.Endpoint,
-// 				},
-// 				db: nil,
-// 			},
-// 			args: args{},
-// 			mock: func(a args, mock *MockoauthInterface) {
-// 				mock.EXPECT().Exchange(a.ctx, a.code).Return(&oauth2.Token{}, nil)
-// 				mock.EXPECT().Client(a.ctx, gomock.Any()).Return(&http.Client{})
-// 				gock.New("https://www.googleapis.com/oauth2/v2/userinfo").
-// 					Reply(200).BodyString("{")
-// 			},
-// 			want:    user.User{},
-// 			wantErr: true,
-// 		}, {
-// 			name: "Test Error - Request Failed",
-// 			fields: fields{
-// 				oauth: &oauth2.Config{
-// 					ClientID:     "client",
-// 					ClientSecret: "secret",
-// 					RedirectURL:  "http://localhost:8181/test",
-// 					Endpoint:     google.Endpoint,
-// 				},
-// 				db: nil,
-// 			},
-// 			args: args{},
-// 			mock: func(a args, mock *MockoauthInterface) {
-// 				mock.EXPECT().Exchange(a.ctx, a.code).Return(&oauth2.Token{}, nil)
-// 				mock.EXPECT().Client(a.ctx, gomock.Any()).Return(&http.Client{})
-// 				gock.New("https://www.googleapis.com/oauth2/v2/userinfo").
-// 					Reply(200).SetError(errors.New("some error"))
-// 			},
-// 			want:    user.User{},
-// 			wantErr: true,
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			ctrl := gomock.NewController(t)
-// 			defer ctrl.Finish()
+func TestRepo_GetGoogleUserInfo(t *testing.T) {
+	type args struct {
+		code string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		mock    func(a args, mock *MockIOAuth)
+		want    google.GoogleUserInfo
+		wantErr bool
+	}{{
+		name: "success",
+		args: args{
+			code: "404",
+		},
+		mock: func(a args, mock *MockIOAuth) {
+			rtok := &oauth2.Token{}
+			mock.EXPECT().Exchange(gomock.Any(), a.code).Return(rtok, nil)
+			mock.EXPECT().Client(gomock.Any(), rtok).Return(&http.Client{})
+			gock.New("https://www.googleapis.com/oauth2/v2/userinfo").
+				Reply(200).BodyString(`{"name":"roger"}`)
+		},
+		want: google.GoogleUserInfo{
+			Name: "roger",
+		},
+		wantErr: false,
+	}, {
+		name: "error_exchange",
+		args: args{
+			code: "404",
+		},
+		mock: func(a args, mock *MockIOAuth) {
+			mock.EXPECT().Exchange(gomock.Any(), a.code).Return(&oauth2.Token{}, assert.ErrMock)
+		},
+		want:    google.GoogleUserInfo{},
+		wantErr: true,
+	}, {
+		name: "error_getting_userinfo",
+		args: args{
+			code: "404",
+		},
+		mock: func(a args, mock *MockIOAuth) {
+			rtok := &oauth2.Token{}
+			mock.EXPECT().Exchange(gomock.Any(), a.code).Return(rtok, nil)
+			mock.EXPECT().Client(gomock.Any(), rtok).Return(&http.Client{})
+			gock.New("https://www.googleapis.com/oauth2/v2/userinfo").ReplyError(assert.ErrMock)
+		},
+		want:    google.GoogleUserInfo{},
+		wantErr: true,
+	}}
 
-// 			mockOAuth := NewMockoauthInterface(ctrl)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-// 			r := New(tt.fields.db, tt.fields.oauth)
-// 			r.oauth = mockOAuth
-// 			tt.mock(tt.args, mockOAuth)
-// 			got, err := r.GetGoogleUserInfo(tt.args.ctx, tt.args.code)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("GetGoogleUserInfo() error = %v, wantErr %v", err, tt.wantErr)
-// 				return
-// 			}
-// 			if !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("GetGoogleUserInfo() got = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-func TestRepo_GoogleLoginURL(t *testing.T) {
+			mockOAuth := NewMockIOAuth(ctrl)
+
+			r := New(mockOAuth)
+
+			tt.mock(tt.args, mockOAuth)
+
+			got, err := r.GetGoogleUserInfo(ctx, tt.args.code)
+			assert.Equal(t, tt.want, got)
+			assert.WantError(t, tt.wantErr, err)
+		})
+	}
+}
+
+func TestRepo_GoogleRedirectURL(t *testing.T) {
 	type args struct {
 		ctx   context.Context
 		state string
@@ -162,8 +119,8 @@ func TestRepo_GoogleLoginURL(t *testing.T) {
 
 			tt.mock(tt.args, mockOAuth)
 
-			if got := r.GoogleLoginURL(tt.args.ctx, tt.args.state); got != tt.want {
-				t.Errorf("GoogleLoginURL() = %v, want %v", got, tt.want)
+			if got := r.GoogleRedirectURL(tt.args.ctx, tt.args.state); got != tt.want {
+				t.Errorf("GoogleRedirectURL() = %v, want %v", got, tt.want)
 			}
 		})
 	}

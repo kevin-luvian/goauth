@@ -1,6 +1,6 @@
 package auth
 
-//go:generate mockgen -source=./init.go -destination=mock_auth.go -package=auth
+//go:generate mockgen -source=./init.go -destination=mock_auth_repo.go -package=auth
 
 import (
 	"context"
@@ -19,8 +19,8 @@ type Repo struct {
 	oauth IOAuth
 }
 
-func New(cfg *oauth2.Config) *Repo {
+func New(oauth IOAuth) *Repo {
 	return &Repo{
-		oauth: cfg,
+		oauth: oauth,
 	}
 }

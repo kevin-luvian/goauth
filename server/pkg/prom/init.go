@@ -23,6 +23,7 @@ func Setup() {
 		requestDuration,
 		requestSize,
 		responseSize,
+		functionsDuration,
 		version.NewCollector("version"),
 	)
 }

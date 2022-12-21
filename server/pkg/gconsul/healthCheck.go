@@ -1,27 +1,18 @@
 package gconsul
 
 import (
-	"time"
-
 	"github.com/kevin-luvian/goauth/server/pkg/logging"
 )
 
-func (c *Consul) UpdateTTL(check func() error) {
-	ticker := time.NewTicker(c.HealthTTL)
-	for range ticker.C {
-		c.update(check)
-	}
-}
-
-func (c *Consul) update(check func() error) {
+func NotifyHealth(check func() error) {
 	err := check()
 	if err != nil {
 		logging.Infof("err=\"Check failed\" msg=\"%s\"", err.Error())
-		if agentErr := c.ConsulAgent.FailTTL("service:"+c.Name, err.Error()); agentErr != nil {
+		if agentErr := instance.ConsulAgent.FailTTL("service:"+instance.Name, err.Error()); agentErr != nil {
 			logging.Errorln(agentErr)
 		}
 	} else {
-		if agentErr := c.ConsulAgent.PassTTL("service:"+c.Name, ""); agentErr != nil {
+		if agentErr := instance.ConsulAgent.PassTTL("service:"+instance.Name, ""); agentErr != nil {
 			logging.Errorln(agentErr)
 		}
 	}

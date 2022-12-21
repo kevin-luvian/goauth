@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"reflect"
 	"syscall"
+	"time"
 
 	"github.com/kevin-luvian/goauth/server/pkg/logging"
 	"github.com/kevin-luvian/goauth/server/pkg/setting"
@@ -50,6 +51,15 @@ var (
 	// The strategy to use; Single by default.
 	Strategy strategy = Single
 )
+
+func Ticker(tick time.Duration, f func()) {
+	go func() {
+		ticker := time.NewTicker(tick)
+		for range ticker.C {
+			f()
+		}
+	}()
+}
 
 // Re-exec this same image without dropping the net.Listener.
 func Exec(l net.Listener) error {

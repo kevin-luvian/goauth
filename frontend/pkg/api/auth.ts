@@ -1,10 +1,20 @@
-import { BaseAPI, GetAPI, PostAPI } from "./fetcher";
+import { APIResponse, BaseAPI, GetAPI, PostAPI } from "./fetcher";
 
 export const GetGoogleLoginURL = () => `${BaseAPI}/v1/auth/login/google`;
+export const GetGoogleSignupURL = () => `${BaseAPI}/v1/auth/signup/google`;
 
-export const GoogleLogin = () => GetAPI("/v1/auth/login/google");
+export const RefreshToken = async () => {
+  let token = "";
 
-export const GoogleLoginGET = async () => {
-  const data = await GetAPI("https://www.google.com/");
-  return data;
+  const res = await GetAPI(`${BaseAPI}/v1/auth/refresh-token`);
+  if (res.success) {
+    token = res.data["token"];
+  }
+
+  const reLogin = !res.success || res.error != null;
+
+  return {
+    reLogin: reLogin,
+    token: token,
+  };
 };

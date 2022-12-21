@@ -11,6 +11,11 @@ const Page: NextPageWithLayout = () => {
     window.location.replace(url);
   };
 
+  const handleGoogleSignup = async () => {
+    const url = API.Auth.GetGoogleSignupURL();
+    window.location.replace(url);
+  };
+
   return (
     <div className="m-3">
       <p>hello world</p>
@@ -25,9 +30,19 @@ const Page: NextPageWithLayout = () => {
           shape="round"
           icon={<GoogleOutlined />}
           size="middle"
+          onClick={handleGoogleSignup}
+        >
+          Singup Google
+        </Button>
+
+        <Button
+          type="primary"
+          shape="round"
+          icon={<GoogleOutlined />}
+          size="middle"
           onClick={handleGoogleLogin}
         >
-          Google
+          Login Google
         </Button>
       </Space>
     </div>

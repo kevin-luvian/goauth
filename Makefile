@@ -1,21 +1,25 @@
-#!/bin/bash
-
-export NOW=$(shell date +"%Y/%m/%d")
+export NOW=$(shell date +"%Y/%m/%d %H:%M:%S")
+export PKGS=$(shell go list ./... | grep -vE '(vendor|cmd|entity|pkg/assert)')
 
 configure:
 	@echo "${NOW} === CONFIGURING FILES ==="
 	@cp ./conf/app.ini.example conf/app.ini
-	@echo "${NOW} === CONFIGURED ==="
+	@echo "=== CONFIGURED ==="
 
 generate:
 	@echo "${NOW} === GENERATING FILES ==="
 	@go generate ./...
-	@echo "${NOW} === GENERATED ==="
+	@echo "=== GENERATED ==="
 
 migrate:
 	@echo "${NOW} === RUNNING MIGRATION ==="
-	@go run ./server/cmd/migrator
-	@echo "${NOW} === MIGRATED ==="
+	@go run ./server/cmd/migrator $(args)
+	@echo "=== MIGRATED ==="
+
+play:
+	@echo "${NOW} 🚀 === RUNNING PLAYGROUND === 🚀"
+	@go run ./server/cmd/playground
+	@echo "=== DONE ==="
 
 .PHONY: dev
 dev:
@@ -25,14 +29,15 @@ dev:
 	@echo "click this link to open the frontend http://localhost:8001"
 
 dev-all:
-	@echo "${NOW} === RUNNING DEVELOPMENT ALL ==="
+	@echo "${NOW} 🛠 === RUNNING DEVELOPMENT ALL === 🛠"
 	@cd tools/ && docker-compose stop && docker-compose up -d
 	@docker-compose stop && docker-compose up -d
+	@echo "🚀 === RAN === 🚀"
 
 dev-db:
-	@echo "${NOW} === RUNNING DEVELOPMENT DB ==="
+	@echo "🛠 ${NOW} === RUNNING DEVELOPMENT DB === 🛠"
 	@docker-compose stop goauth-pg && docker-compose up -d goauth-pg
-	@echo "${NOW} === DONE ==="
+	@echo "🚀 === RAN === 🚀"
 
 dev-fe:
 	@echo "${NOW} === RUNNING DEVELOPMENT ENV ==="
@@ -47,8 +52,10 @@ dev-tools:
 
 clean:
 	@echo "🛠 CLEANING MACHINE FOR DEVELOPMENT 🛠"
-	@echo "1⃣ REMOVING BIN FOLDER"
-	@rm -r ./bin
+	@echo "1 REMOVING BIN FOLDER"
+	@rm -f -r ./bin
+	@echo "1 REMOVING TEST OUT"
+	@rm -f ./test.out
 	@echo "🚀 Done, You are ready to Go 🚀"
 
 down:
@@ -60,3 +67,8 @@ down:
 down-tools:
 	@cd tools/ && docker-compose stop
 	@cd tools/ && docker-compose down
+
+test:
+	@echo "${NOW} === TESTING ==="
+	@go test -cover -race ${PKGS} -short | tee ./test.out
+	@echo "=== DONE ==="
